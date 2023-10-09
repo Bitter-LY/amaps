@@ -1,11 +1,16 @@
-<script setup lang="ts"></script>
+<script setup lang="ts">
+import MapContainer from '@/components/MapContainer/index.vue'
+</script>
+
 <template>
-  <div>
-    <p
-      v-for="i in 1000"
-      :key="i"
-    >
-      Viewer{{ i }}
-    </p>
+  <div class="container">
+    <MapContainer />
   </div>
 </template>
+
+<style scoped>
+.container {
+  width: 100%;
+  height: 100%;
+}
+</style>
