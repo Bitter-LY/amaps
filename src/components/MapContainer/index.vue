@@ -1,65 +1,74 @@
-<script lang="ts">
-export function unitUtil(value?: string | number, unit = 'px'): string | undefined {
-  if (typeof value === 'string') {
-    if (!/(px|rem|vw|vh|%)/.test(value)) {
-      throw new Error('字符串必须包含css单位，如：px、rem、vw、vh、%等')
-    }
-
-    return value
-  } else if (typeof value === 'number') return `${value}${unit}`
-  else return undefined
-}
-</script>
-
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted } from 'vue'
+import { computed, onMounted, onUnmounted, shallowRef } from 'vue'
+import { type CSSProperties, type Ref } from 'vue'
 import AMapLoader from '@amap/amap-jsapi-loader'
 
-interface Props {
-  width?: string | number
-  height?: string | number
+export type IMapInstance = {
+  getMapInstance: () => AMap.Map | null
 }
 
-const props = withDefaults(defineProps<Props>(), {
-  width: '100%',
-  height: '100%'
+interface IMapComponentProps {
+  mapLoaderOptions: {
+    key: string
+    version: string
+    plugins?: string[]
+  }
+  mapOptions?: AMap.MapOptions
+  className?: string | string[]
+  style?: CSSProperties
+  mapRef?: Ref<HTMLDivElement | null>
+}
+
+interface IMapComponentEmits {
+  (e: 'mapMounted', value: AMap.Map | null): void
+}
+
+const props = withDefaults(defineProps<IMapComponentProps>(), {})
+
+const emits = defineEmits<IMapComponentEmits>()
+
+const className = computed(() => {
+  const _className = props.className
+  return Array.isArray(_className) ? _className.join(' ') : _className
 })
+const style = computed(() => props.style)
 
-const _w = computed(() => unitUtil(props.width))
-const _h = computed(() => unitUtil(props.height))
+const mapContainerRef = shallowRef<HTMLDivElement | null>(null)
+const mapInstance = shallowRef<AMap.Map | null>(null)
 
-let map: { destroy: () => void } | null = null
-
-onMounted(() => {
-  AMapLoader.load({
-    key: 'bfb9ad66b3ccb45e5d46039c36710bc5',
-    version: '2.0',
-    plugins: []
-  })
+function initMap() {
+  AMapLoader.load(props.mapLoaderOptions)
     .then((AMap) => {
-      map = new AMap.Map('container', {
-        viewMode: '2D',
-        zoom: 12,
-        center: [116.397428, 39.90923]
+      const map = new AMap.Map(mapContainerRef.value, props.mapOptions)
+
+      map?.on('complete', () => {
+        emits('mapMounted', map)
       })
+
+      mapInstance.value = map
     })
     .catch((e) => {
       console.log(e)
     })
+}
+
+onMounted(() => {
+  initMap()
+})
+
+defineExpose<IMapInstance>({
+  getMapInstance: () => mapInstance.value
 })
 
 onUnmounted(() => {
-  map?.destroy()
+  mapInstance.value?.destroy()
 })
 </script>
 
 <template>
-  <div id="container"></div>
+  <div
+    ref="mapContainerRef"
+    :class="className"
+    :style="style"
+  ></div>
 </template>
-
-<style scoped>
-#container {
-  width: v-bind('_w');
-  height: v-bind('_h');
-}
-</style>

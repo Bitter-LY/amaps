@@ -15,6 +15,7 @@
   },
   "dependencies": {
     "@amap/amap-jsapi-loader": "^1.0.1",
+    "@amap/amap-jsapi-types": "^0.0.13",
     "lodash-es": "^4.17.21",
     "naive-ui": "^2.35.0",
     "vue": "^3.3.4",
