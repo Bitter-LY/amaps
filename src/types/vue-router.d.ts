@@ -1,3 +1,5 @@
+import '@amap/amap-jsapi-types'
+
 export {}
 
 declare module 'vue-router' {
